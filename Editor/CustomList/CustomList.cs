@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using VahTyah.Core;
 
-namespace VahTyah
+namespace VahTyah.LevelEditor
 {
     public class CustomList
     {

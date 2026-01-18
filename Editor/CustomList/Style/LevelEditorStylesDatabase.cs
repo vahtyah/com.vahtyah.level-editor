@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using VahTyah.Core;
 
-namespace VahTyah
+namespace VahTyah.LevelEditor
 {
     // [CreateAssetMenu(fileName = "StylesDatabase", menuName = "Custom List/List Styles Database", order = 1)]
     public class LevelEditorStylesDatabase : ScriptableObject

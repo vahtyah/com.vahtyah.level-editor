@@ -1,15 +1,16 @@
-using UnityEngine;
 using UnityEditor;
 using System.IO;
+using VahTyah.Core;
 
-namespace VahTyah
+namespace VahTyah.LevelEditor
 {
     public static class LevelEditorSettings
     {
+        private const string MENU_ROOT = "Tools/VahTyah/Level Editor/";
         private const string EDITOR_STYLE_PATH = "Assets/Editor/EditorStyle";
         private const string LEVEL_EDITOR_STYLE_ASSET_NAME = "LevelEditorStyleDatabase.asset";
 
-        [MenuItem("Tools/VahTyah/Styles/Level Editor Style", false, 2)]
+        [MenuItem(MENU_ROOT + "Style", false, 1)]
         public static void CreateLevelEditorStyle()
         {
             if (!Directory.Exists(EDITOR_STYLE_PATH))

@@ -3,59 +3,62 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public static class LevelEditorUtils
+namespace VahTyah.LevelEditor
 {
-    private static string pendingScenePath;
-    private static bool pendingAskToSave;
-
-    #region Scene Controller
-
-    public static bool IsInScene(string sceneName)
+    public static class LevelEditorUtils
     {
-        var activeScene = SceneManager.GetActiveScene();
-        return activeScene.name == sceneName;
-    }
+        private static string pendingScenePath;
+        private static bool pendingAskToSave;
 
-    public static void OpenScene(string scenePath, bool askToSave = true)
-    {
-        if (Application.isPlaying)
+        #region Scene Controller
+
+        public static bool IsInScene(string sceneName)
         {
-            pendingScenePath = scenePath;
-            pendingAskToSave = askToSave;
-            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
-            EditorApplication.isPlaying = false;
-            return;
+            var activeScene = SceneManager.GetActiveScene();
+            return activeScene.name == sceneName;
         }
 
-        OpenSceneInternal(scenePath, askToSave);
-    }
-
-    private static void OnPlayModeStateChanged(PlayModeStateChange state)
-    {
-        if (state == PlayModeStateChange.EnteredEditMode && !string.IsNullOrEmpty(pendingScenePath))
+        public static void OpenScene(string scenePath, bool askToSave = true)
         {
-            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
-            var path = pendingScenePath;
-            var askToSave = pendingAskToSave;
-            pendingScenePath = null;
-            
-            // Delay to ensure editor is fully ready
-            EditorApplication.delayCall += () => OpenSceneInternal(path, askToSave);
-        }
-    }
-
-    private static void OpenSceneInternal(string scenePath, bool askToSave = true)
-    {
-        if (askToSave && SceneManager.GetActiveScene().isDirty)
-        {
-            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            if (Application.isPlaying)
             {
+                pendingScenePath = scenePath;
+                pendingAskToSave = askToSave;
+                EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+                EditorApplication.isPlaying = false;
                 return;
+            }
+
+            OpenSceneInternal(scenePath, askToSave);
+        }
+
+        private static void OnPlayModeStateChanged(PlayModeStateChange state)
+        {
+            if (state == PlayModeStateChange.EnteredEditMode && !string.IsNullOrEmpty(pendingScenePath))
+            {
+                EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+                var path = pendingScenePath;
+                var askToSave = pendingAskToSave;
+                pendingScenePath = null;
+
+                // Delay to ensure editor is fully ready
+                EditorApplication.delayCall += () => OpenSceneInternal(path, askToSave);
             }
         }
 
-        EditorSceneManager.OpenScene(scenePath);
-    }
+        private static void OpenSceneInternal(string scenePath, bool askToSave = true)
+        {
+            if (askToSave && SceneManager.GetActiveScene().isDirty)
+            {
+                if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                {
+                    return;
+                }
+            }
 
-    #endregion
+            EditorSceneManager.OpenScene(scenePath);
+        }
+
+        #endregion
+    }
 }

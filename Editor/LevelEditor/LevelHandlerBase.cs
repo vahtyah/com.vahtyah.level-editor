@@ -5,9 +5,10 @@ using UnityEngine;
 using UnityEditor;
 using System;
 using System.IO;
+using VahTyah.Core;
 using Object = UnityEngine.Object;
 
-namespace VahTyah
+namespace VahTyah.LevelEditor
 {
     public abstract class LevelsHandlerBase
     {

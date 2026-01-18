@@ -2,8 +2,9 @@
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
+using VahTyah.Core;
 
-namespace VahTyah
+namespace VahTyah.LevelEditor
 {
     public interface IEditorPanel
     {

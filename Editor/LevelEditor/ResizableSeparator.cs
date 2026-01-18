@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-namespace VahTyah
+namespace VahTyah.LevelEditor
 {
     public enum ResizeDirection
     {
