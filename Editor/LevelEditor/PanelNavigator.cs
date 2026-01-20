@@ -8,9 +8,10 @@ namespace VahTyah.LevelEditor
 {
     public interface IEditorPanel
     {
+        void Initialize();
         void OnEnable();
-        void OnDisable();
         void Draw(Rect rect);
+        void OnDisable();
     }
     public class PanelNavigator
     {
@@ -31,7 +32,7 @@ namespace VahTyah.LevelEditor
 
                 foreach (var panel in panels.Values)
                 {
-                    panel.OnEnable();
+                    panel.Initialize();
                 }
             }
 
@@ -55,6 +56,17 @@ namespace VahTyah.LevelEditor
             {
                 currentPanelStyle = LevelEditorStyleData.PanelNavigatorStyles.CreateDefaultStyles();
                 contentBackground = LevelEditorStyleData.GlobalBackground.CreateDefaultStyles();
+            }
+        }
+
+        public void OnEnable()
+        {
+            if (panels != null && panels.Count > 0)
+            {
+                foreach (var panel in panels.Values)
+                {
+                    panel.OnEnable();
+                }
             }
         }
 
