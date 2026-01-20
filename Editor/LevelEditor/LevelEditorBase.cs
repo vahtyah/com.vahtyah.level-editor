@@ -102,6 +102,7 @@ namespace VahTyah.LevelEditor
 
             if (GUILayout.Button("Open LevelEditor Scene", GUILayout.Height(30)))
             {
+                LevelsHandlerBase.IsLastLevelOpened = false;
                 LevelEditorUtils.OpenScene(LEVEL_EDITOR_SCENE_PATH);
             }
         }
