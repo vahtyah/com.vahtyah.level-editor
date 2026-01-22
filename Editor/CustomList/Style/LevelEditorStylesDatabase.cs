@@ -104,6 +104,7 @@ namespace VahTyah.LevelEditor
             public bool enableFooterAddButton = true;
             public bool enableFooterRemoveButton = true;
             public bool enableElementRemoveButton = false;
+            public bool enableAddDropdown = false;
             public bool ignoreDragEvents = false;
 
             [Header("Dimensions")] public float minHeight = 200f;

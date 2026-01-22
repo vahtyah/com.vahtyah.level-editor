@@ -104,6 +104,9 @@ namespace VahTyah.LevelEditor
         private int pageBeginIndex = 0;
         private int pageElementCount = 0;
         private int maxElementCount = 0;
+        
+        // Dropdown
+        private bool enableAddDropdown = false;
 
         // Delegates
         public delegate string GetLabelDelegate(SerializedProperty elementProperty, int elementIndex);
@@ -324,6 +327,8 @@ namespace VahTyah.LevelEditor
             stretchHeight = listStyle.stretchHeight;
             stretchWidth = listStyle.stretchWidth;
 
+            enableAddDropdown = listStyle.enableAddDropdown;
+            
             collapsedElementHeight = listStyle.element.collapsedElementHeight;
 
             emptyListMessage = listStyle.emptyListMessage;
@@ -1094,13 +1099,13 @@ namespace VahTyah.LevelEditor
 
             if (enableFooterAddButton)
             {
-                GUIContent addIcon = addElementWithDropdownCallback != null
+                GUIContent addIcon = addElementWithDropdownCallback != null && enableAddDropdown
                     ? EditorGUIUtility.TrIconContent("Toolbar Plus More")
                     : EditorGUIUtility.TrIconContent("Toolbar Plus");
 
                 if (GUI.Button(footerButtonRect, addIcon, buttonStyle))
                 {
-                    if (addElementWithDropdownCallback != null)
+                    if (enableAddDropdown && addElementWithDropdownCallback != null)
                     {
                         addElementWithDropdownCallback.Invoke(footerButtonRect);
                     }

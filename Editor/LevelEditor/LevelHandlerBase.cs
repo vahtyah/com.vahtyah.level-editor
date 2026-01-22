@@ -196,7 +196,7 @@ namespace VahTyah.LevelEditor
             customList.displayContextMenuCallback = OnDisplayContextMenu;
 
             // Add with dropdown
-            // customList.addElementWithDropdownCallback = OnAddElementWithDropdown;
+            customList.addElementWithDropdownCallback = OnAddElementWithDropdown;
 
             // Double-click
             customList.elementDoubleClickedCallback = OnElementDoubleClicked;
