@@ -116,6 +116,8 @@ namespace VahTyah.LevelEditor
         public delegate void SelectionChangedCallbackDelegate();
 
         public delegate void ListChangedCallbackDelegate();
+        
+        public delegate void ReloadCallbackDelegate();
 
         public delegate void AddElementCallbackDelegate();
 
@@ -141,6 +143,7 @@ namespace VahTyah.LevelEditor
         public GetHeaderLabelCallbackDelegate getHeaderLabelCallback;
         public SelectionChangedCallbackDelegate selectionChangedCallback;
         public ListChangedCallbackDelegate listChangedCallback;
+        public ReloadCallbackDelegate reloadCallback;
         public AddElementCallbackDelegate addElementCallback;
         public RemoveElementCallbackDelegate removeElementCallback;
         public AddElementWithDropdownCallbackDelegate addElementWithDropdownCallback;
@@ -155,6 +158,7 @@ namespace VahTyah.LevelEditor
         public bool enableHeader = false;
         public bool enableFooterAddButton = true;
         public bool enableFooterRemoveButton = true;
+        public bool enableFooterReloadButton = false;
         public bool enableElementRemoveButton = false;
         public bool ignoreDragEvents = false;
         public bool enableSearch = false;
@@ -319,6 +323,7 @@ namespace VahTyah.LevelEditor
             enableSearch = listStyle.enableSearch;
             enableFooterAddButton = listStyle.enableFooterAddButton;
             enableFooterRemoveButton = listStyle.enableFooterRemoveButton;
+            enableFooterReloadButton = listStyle.enableFooterReloadButton;
             enableElementRemoveButton = listStyle.enableElementRemoveButton;
             ignoreDragEvents = listStyle.ignoreDragEvents;
 
@@ -1071,8 +1076,12 @@ namespace VahTyah.LevelEditor
             float leftEdge = rightEdge - 4 - 4;
             leftEdge -= 25;
 
-            if (enableFooterAddButton && enableFooterRemoveButton)
-                leftEdge -= 25;
+            int buttonCount = -1;
+            if (enableFooterAddButton) buttonCount++;
+            if (enableFooterRemoveButton) buttonCount++;
+            if (enableFooterReloadButton) buttonCount++;
+    
+            leftEdge -= 25 * buttonCount;
 
             float borderBackground = globalBackgroundStyle.backgroundConfig.GetLayerByType(LayerType.Border)?.borderWidth.z ?? 0;
 
@@ -1097,6 +1106,16 @@ namespace VahTyah.LevelEditor
 
             GUIStyle buttonStyle = new GUIStyle("RL FooterButton");
 
+            if (enableFooterReloadButton)
+            {
+                if (GUI.Button(footerButtonRect, EditorGUIUtility.TrIconContent("Refresh"), buttonStyle))
+                {
+                    // reloadCallback?.Invoke();
+                    ReloadList();
+                }
+                footerButtonRect.x += 25;
+            }
+            
             if (enableFooterAddButton)
             {
                 GUIContent addIcon = addElementWithDropdownCallback != null && enableAddDropdown
@@ -1695,6 +1714,14 @@ namespace VahTyah.LevelEditor
 
             UndoCallback($"Remove {elementName}");
             removeElementCallback?.Invoke();
+            listChangedCallback?.Invoke();
+        }
+
+        private void ReloadList()
+        {
+            UndoCallback("Reload List");
+            serializedObject.Update();
+            reloadCallback?.Invoke();
             listChangedCallback?.Invoke();
         }
 

@@ -203,14 +203,22 @@ namespace VahTyah.LevelEditor
 
             // Search
             customList.searchFilterCallback = OnSearchFilter;
+            
+            // Reload
+            customList.reloadCallback = OnReload;
 
             // Undo
             customList.listUndoCallback = OnUndo;
         }
 
+
         #endregion
 
         #region Callbacks
+        protected virtual void OnReload()
+        {
+            SetLevelLabels();
+        }
 
         protected virtual string GetLevelLabel(SerializedProperty elementProperty, int elementIndex)
         {

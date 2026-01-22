@@ -103,6 +103,7 @@ namespace VahTyah.LevelEditor
             public bool enableSearch = false;
             public bool enableFooterAddButton = true;
             public bool enableFooterRemoveButton = true;
+            public bool enableFooterReloadButton = false;
             public bool enableElementRemoveButton = false;
             public bool enableAddDropdown = false;
             public bool ignoreDragEvents = false;
