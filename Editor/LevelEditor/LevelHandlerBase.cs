@@ -294,7 +294,7 @@ namespace VahTyah.LevelEditor
             menu.AddItem(new GUIContent(REMOVE_ELEMENT_CALLBACK), false, () => DeleteLevel(index));
         }
 
-        private void OnAddElementWithDropdown(Rect buttonRect)
+        protected virtual void OnAddElementWithDropdown(Rect buttonRect)
         {
             addElementWithDropdownCallback?.Invoke(buttonRect);
         }
