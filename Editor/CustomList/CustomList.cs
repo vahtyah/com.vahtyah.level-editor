@@ -1565,8 +1565,6 @@ namespace VahTyah.LevelEditor
                     break;
 
                 case KeyCode.Delete:
-                case KeyCode.Backspace:
-                    // Delete selected element
                     if (selectedIndex >= 0 && selectedIndex < ArraySize())
                     {
                         RemoveElement();
