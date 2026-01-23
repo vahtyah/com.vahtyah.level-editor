@@ -131,7 +131,12 @@ namespace VahTyah.LevelEditor
 
                 if (Event.current.type == EventType.MouseDown && tabRect.Contains(Event.current.mousePosition))
                 {
-                    currentPanel = kvp.Key;
+                    if (currentPanel != kvp.Key)
+                    {
+                        panels[currentPanel].OnDisable();
+                        currentPanel = kvp.Key;
+                        panels[currentPanel].OnEnable();
+                    }
                     Event.current.Use();
                 }
 
