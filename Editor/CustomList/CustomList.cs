@@ -1715,7 +1715,7 @@ namespace VahTyah.LevelEditor
             listChangedCallback?.Invoke();
         }
 
-        private void ReloadList()
+        public void ReloadList()
         {
             UndoCallback("Reload List");
             serializedObject.Update();
