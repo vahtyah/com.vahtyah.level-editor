@@ -227,7 +227,7 @@ namespace VahTyah.LevelEditor
                 return levelLabels[elementIndex];
             }
 
-            return $"Level {FormatLevelNumber(elementIndex + 1)}";
+            return $"Level {FormatLevelNumberForDisplay(elementIndex + 1)}";
         }
 
         private string GetHeaderLabel()
@@ -257,7 +257,7 @@ namespace VahTyah.LevelEditor
 
         private void OnListReorderedWithDetails(int fromIndex, int toIndex)
         {
-            Debug.Log($"Level moved from position {FormatLevelNumber(fromIndex + 1)} to {FormatLevelNumber(toIndex + 1)}");
+            Debug.Log($"Level moved from position {FormatLevelNumberForDisplay(fromIndex + 1)} to {FormatLevelNumberForDisplay(toIndex + 1)}");
         }
 
         private void OnAddElement()
@@ -424,7 +424,7 @@ namespace VahTyah.LevelEditor
                 return;
 
             // Confirmation dialog
-            string levelLabel = levelIndex < levelLabels.Count ? levelLabels[levelIndex] : $"Level {FormatLevelNumber(levelIndex + 1)}";
+            string levelLabel = levelIndex < levelLabels.Count ? levelLabels[levelIndex] : $"Level {FormatLevelNumberForDisplay(levelIndex + 1)}";
             string message = $"{REMOVE_LEVEL}{BRACKET}{levelLabel}{BRACKET}{QUESTION_MARK}";
 
             if (!EditorUtility.DisplayDialog(REMOVING_LEVEL_TITLE, message, YES, CANCEL))
@@ -488,8 +488,8 @@ namespace VahTyah.LevelEditor
         public virtual string GetLevelLabel(Object levelObject, int index)
         {
             if (levelObject == null)
-                return $"{FormatLevelNumber(index + 1)} | (Missing)";
-            return $"{FormatLevelNumber(index + 1)} | {levelObject.name}";
+                return $"{FormatLevelNumberForDisplay(index + 1)} | (Missing)";
+            return $"{FormatLevelNumberForDisplay(index + 1)} | {levelObject.name}";
         }
 
         public void RenameLevels()
@@ -502,7 +502,7 @@ namespace VahTyah.LevelEditor
                 if (levelObject == null)
                     continue;
 
-                string expectedName = LEVEL_PREFIX + FormatNumber(i + 1);
+                string expectedName = LEVEL_PREFIX + FormatLevelNumberForFile(i + 1);
                 if (!levelObject.name.Equals(expectedName))
                 {
                     incorrectIndices.Add(i);
@@ -534,7 +534,7 @@ namespace VahTyah.LevelEditor
                 if (levelObject != null)
                 {
                     string assetPath = AssetDatabase.GetAssetPath(levelObject);
-                    string correctName = LEVEL_PREFIX + FormatNumber(index + 1);
+                    string correctName = LEVEL_PREFIX + FormatLevelNumberForFile(index + 1);
                     AssetDatabase.RenameAsset(assetPath, correctName);
                 }
             }
@@ -567,12 +567,12 @@ namespace VahTyah.LevelEditor
 
                 if (levelObject == null)
                 {
-                    Debug.LogError($"Level {FormatLevelNumber(i + 1)}:  NULL reference!");
+                    Debug.LogError($"Level {FormatLevelNumberForDisplay(i + 1)}:  NULL reference!");
                     errorCount++;
                     continue;
                 }
 
-                Debug.Log($"Validating Level {FormatLevelNumber(i + 1)}: {levelLabels[i]}");
+                Debug.Log($"Validating Level {FormatLevelNumberForDisplay(i + 1)}: {levelLabels[i]}");
                 // LevelEditorBase.Instance.LogErrorsForGlobalValidation(levelObject, i);
             }
 
@@ -647,7 +647,7 @@ namespace VahTyah.LevelEditor
 
             while (true)
             {
-                string formattedNumber = FormatNumber(levelNumber);
+                string formattedNumber = FormatLevelNumberForFile(levelNumber);
                 string path = Application.dataPath.Replace("Assets", string.Empty) +
                               GetRelativeLevelAssetPathByNumber(formattedNumber);
 
@@ -665,12 +665,12 @@ namespace VahTyah.LevelEditor
             return LevelFolderPath + PATH_SEPARATOR + LEVEL_PREFIX + levelNumber + ASSET_SUFFIX;
         }
 
-        private static string FormatNumber(int number)
+        protected virtual string FormatLevelNumberForFile(int number)
         {
-            return number.ToString(FORMAT_TYPE);
+            return number.ToString();
         }
 
-        private string FormatLevelNumber(int number)
+        protected virtual string FormatLevelNumberForDisplay(int number)
         {
             int maxNumber = levelsSerializedProperty.arraySize;
             int digits = maxNumber.ToString().Length;
@@ -705,7 +705,7 @@ namespace VahTyah.LevelEditor
             SetLevelLabels();
             AssetDatabase.SaveAssets();
 
-            Debug.Log($"Moved level from position {FormatLevelNumber(fromIndex + 1)} to {FormatLevelNumber(toIndex + 1)}");
+            Debug.Log($"Moved level from position {FormatLevelNumberForDisplay(fromIndex + 1)} to {FormatLevelNumberForDisplay(toIndex + 1)}");
         }
 
         #endregion
