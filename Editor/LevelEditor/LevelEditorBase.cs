@@ -2,15 +2,17 @@ using System.Reflection;
 using UnityEngine;
 using System;
 using UnityEditor;
+using VahTyah.LevelEditor;
 
 namespace VahTyah.LevelEditor
 {
-    public abstract class LevelEditorBase : EditorWindow
+    public abstract class LevelEditorBase : EditorWindow, IHasCustomMenu
     {
         public static EditorWindow Window;
+        public static LevelEditorBase Instance;
 
         protected ResizableSeparator ResizableSidebar;
-        private LevelsHandlerBase _levelHandler;
+        protected LevelsHandlerBase LevelHandler;
 
         private const string LEVEL_EDITOR_SCENE_PATH = "Assets/_Game/LevelEditor/Editor/Scene/LevelEditor.unity";
         private const string LEVEL_EDITOR_SCENE_NAME = "LevelEditor";
@@ -50,7 +52,8 @@ namespace VahTyah.LevelEditor
 
         protected virtual void OnEnable()
         {
-            _levelHandler = GetLevelHandler;
+            LevelHandler = GetLevelHandler;
+            Instance = this;
             ResizableSidebar = new ResizableSeparator("editor_sidebar_width", 240);
         }
 
@@ -70,8 +73,8 @@ namespace VahTyah.LevelEditor
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.BeginVertical(GUI.skin.box, GUILayout.MaxWidth(ResizableSidebar.CurrentWidth));
-            _levelHandler.DisplayReordableList();
-            _levelHandler.DrawToolbar();
+            LevelHandler.DisplayReordableList();
+            LevelHandler.DrawToolbar();
             EditorGUILayout.EndVertical();
 
             ResizableSidebar.DrawResizeSeparator();
@@ -106,5 +109,46 @@ namespace VahTyah.LevelEditor
                 LevelEditorUtils.OpenScene(LEVEL_EDITOR_SCENE_PATH);
             }
         }
+
+        public virtual void DisplaySettings()
+        {
+            GUILayout.Space(5);
+            EditorGUILayout.LabelField("Levels Settings", EditorStyles.boldLabel);
+            GUILayout.Space(5);
+            
+            LevelHandler.CustomList.Settings.Display();
+        }
+
+        public void AddItemsToMenu(GenericMenu menu)
+        {
+            menu.AddItem(new GUIContent("Settings"), false, OpenSettings);
+        }
+
+        private void OpenSettings()
+        {
+            LevelEditorSettingsWindow.ShowWindow();
+        }
+    }
+}
+
+public class LevelEditorSettingsWindow : EditorWindow
+{
+    private const string WINDOW_TITLE = "Level Editor Features";
+
+    private Vector2 scrollPos;
+
+    public static void ShowWindow()
+    {
+        var window = GetWindow<LevelEditorSettingsWindow>(WINDOW_TITLE);
+        window.minSize = new Vector2(350, 450);
+        window.maxSize = new Vector2(350, 600);
+        window.Show();
+    }
+
+    private void OnGUI()
+    {
+        scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
+        LevelEditorBase.Instance.DisplaySettings();
+        EditorGUILayout.EndScrollView();
     }
 }

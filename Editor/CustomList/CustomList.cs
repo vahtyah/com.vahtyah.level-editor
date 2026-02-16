@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -55,14 +55,11 @@ namespace VahTyah.LevelEditor
         private Rect nextPageButtonRect;
         private Rect lastPageButtonRect;
         private Rect paginationLabelRect;
+        
+        //Settings
+        public readonly CustomListSettings Settings = new CustomListSettings();
 
-        // Layer Configurations
-        // private LayerConfiguration globalBackgroundConfig;
-        // private LayerConfiguration headerBackgroundConfig;
-        // private LayerConfiguration listBackgroundConfig;
-        // private LayerConfiguration paginationBackgroundConfig;
-        // private LayerConfiguration selectedElementConfig;
-        // private LayerConfiguration unselectedElementConfig;
+        //Style
         private LevelEditorStyleData currentCustomStyle;
         private LevelEditorStyleData.CustomListStyle customListStyle;
         private LevelEditorStyleData.GlobalBackground globalBackgroundStyle;
@@ -104,7 +101,7 @@ namespace VahTyah.LevelEditor
         private int pageBeginIndex = 0;
         private int pageElementCount = 0;
         private int maxElementCount = 0;
-        
+
         // Dropdown
         private bool enableAddDropdown = false;
 
@@ -116,7 +113,7 @@ namespace VahTyah.LevelEditor
         public delegate void SelectionChangedCallbackDelegate();
 
         public delegate void ListChangedCallbackDelegate();
-        
+
         public delegate void ReloadCallbackDelegate();
 
         public delegate void AddElementCallbackDelegate();
@@ -154,23 +151,14 @@ namespace VahTyah.LevelEditor
         public ElementDoubleClickedDelegate elementDoubleClickedCallback;
         public SearchFilterDelegate searchFilterCallback;
 
-        // Settings
-        public bool enableHeader = false;
-        public bool enableFooterAddButton = true;
-        public bool enableFooterRemoveButton = true;
-        public bool enableFooterReloadButton = false;
-        public bool enableElementRemoveButton = false;
-        public bool ignoreDragEvents = false;
-        public bool enableSearch = false;
-
         // Search state
         private string searchQuery = "";
         private List<int> filteredIndices = new List<int>();
         private bool isSearchActive = false;
 
         //mesages
-        private string emptyListMessage = "List is empty";
-        private string noResultsMessage = "No results found";
+        private static readonly string emptyListMessage = "List is empty";
+        private static readonly string noResultsMessage = "No results found";
 
         // Properties
         public int SelectedIndex
@@ -205,8 +193,8 @@ namespace VahTyah.LevelEditor
 
         public bool IgnoreDragEvents
         {
-            get => ignoreDragEvents;
-            set => ignoreDragEvents = value;
+            get => Settings.IgnoreDragEvents;
+            set => Settings.IgnoreDragEvents = value;
         }
 
         public EditorWindow ParentWindow
@@ -310,37 +298,26 @@ namespace VahTyah.LevelEditor
 
             if (currentCustomStyle == null)
             {
-                customListStyle = LevelEditorStyleData.CustomListStyle.CreateDefaultStyles();
-                globalBackgroundStyle = LevelEditorStyleData.GlobalBackground.CreateDefaultStyles();
+                bool isDarkMode = EditorGUIUtility.isProSkin;
+                customListStyle = LevelEditorStyleData.CustomListStyle.CreateDefaultStyles(isDarkMode);
+                globalBackgroundStyle = LevelEditorStyleData.GlobalBackground.CreateDefaultStyles(isDarkMode);
                 return;
             }
-            
+
             customListStyle = currentCustomStyle.customListStyle;
             globalBackgroundStyle = currentCustomStyle.globalBackground;
 
-            var listStyle = currentCustomStyle.customListStyle;
-            enableHeader = listStyle.enableHeader;
-            enableSearch = listStyle.enableSearch;
-            enableFooterAddButton = listStyle.enableFooterAddButton;
-            enableFooterRemoveButton = listStyle.enableFooterRemoveButton;
-            enableFooterReloadButton = listStyle.enableFooterReloadButton;
-            enableElementRemoveButton = listStyle.enableElementRemoveButton;
-            ignoreDragEvents = listStyle.ignoreDragEvents;
+            minHeight = customListStyle.minHeight;
+            minWidth = customListStyle.minWidth;
+            stretchHeight = customListStyle.stretchHeight;
+            stretchWidth = customListStyle.stretchWidth;
 
-            minHeight = listStyle.minHeight;
-            minWidth = listStyle.minWidth;
-            stretchHeight = listStyle.stretchHeight;
-            stretchWidth = listStyle.stretchWidth;
+            enableAddDropdown = customListStyle.enableAddDropdown;
 
-            enableAddDropdown = listStyle.enableAddDropdown;
-            
-            collapsedElementHeight = listStyle.element.collapsedElementHeight;
-
-            emptyListMessage = listStyle.emptyListMessage;
-            noResultsMessage = listStyle.noResultsMessage;
-
+            collapsedElementHeight = customListStyle.element.collapsedElementHeight;
             RequestRepaint();
         }
+
         private void ExecuteOnce()
         {
             if (executedOnce) return;
@@ -457,12 +434,12 @@ namespace VahTyah.LevelEditor
             // Draw global background
             LayerDrawingSystem.DrawLayers(globalRect, globalBackgroundStyle.backgroundConfig);
 
-            if (enableHeader)
+            if (Settings.EnableHeader)
             {
                 DrawHeader();
             }
 
-            if (enableSearch)
+            if (Settings.EnableSearch)
             {
                 DrawSearch();
             }
@@ -474,24 +451,26 @@ namespace VahTyah.LevelEditor
                 DrawPagination();
             }
 
-            if (enableFooterAddButton || enableFooterRemoveButton)
+            if (Settings.EnableFooterAddButton || Settings.EnableFooterRemoveButton)
             {
                 DrawFooterButtons();
             }
 
             // Handle drag & drop detection
             if (currentEvent.isMouse && ArraySize() > 0 &&
-                currentEvent.type != EventType.Used && !ignoreDragEvents && !isSearchActive)
+                currentEvent.type != EventType.Used && !IgnoreDragEvents && !isSearchActive)
             {
                 HandleDraggingDetection();
             }
 
-            if (currentEvent.type == EventType.ScrollWheel && ArraySize() > 0)
+            if (Settings.EnableScrollWheelNavigation && currentEvent.type == EventType.ScrollWheel &&
+                ArraySize() > 0)
             {
                 HandleScrollWheel();
             }
 
-            if (currentEvent.type == EventType.KeyDown && ArraySize() > 0)
+            if (Settings.EnableKeyboardNavigation && currentEvent.type == EventType.KeyDown &&
+                ArraySize() > 0)
             {
                 HandleKeyboardNavigation();
             }
@@ -527,10 +506,10 @@ namespace VahTyah.LevelEditor
             float availableHeight = globalRect.height;
 
             // Subtract header
-            if (enableHeader)
+            if (Settings.EnableHeader)
                 availableHeight -= HEADER_HEIGHT;
 
-            if (enableSearch)
+            if (Settings.EnableSearch)
                 availableHeight -= SEARCH_HEIGHT;
 
             // Subtract footer
@@ -591,7 +570,7 @@ namespace VahTyah.LevelEditor
             listRect.Set(globalRect.x, globalRect.y, globalRect.width, globalRect.height);
 
             // Header
-            if (enableHeader)
+            if (Settings.EnableHeader)
             {
                 headerRect.Set(globalRect.x, globalRect.y, globalRect.width, HEADER_HEIGHT);
                 headerContentRect.Set(
@@ -603,9 +582,9 @@ namespace VahTyah.LevelEditor
                 listRect.yMin += HEADER_HEIGHT;
             }
 
-            if (enableSearch)
+            if (Settings.EnableSearch)
             {
-                float searchY = enableHeader ? headerRect.yMax : globalRect.y;
+                float searchY = Settings.EnableHeader ? headerRect.yMax : globalRect.y;
                 searchRect.Set(globalRect.x, searchY, globalRect.width, SEARCH_HEIGHT);
 
                 searchFieldRect.Set(
@@ -626,8 +605,9 @@ namespace VahTyah.LevelEditor
             }
 
             // Footer
-            float borderWidth = globalBackgroundStyle.backgroundConfig.GetLayerByType(LayerType.Border)?.borderWidth.w ?? 0;
-            
+            float borderWidth =
+                globalBackgroundStyle.backgroundConfig.GetLayerByType(LayerType.Border)?.borderWidth.w ?? 0;
+
             footerButtonsRect.Set(
                 globalRect.x,
                 globalRect.yMax - FOOTER_HEIGHT + borderWidth - 1,
@@ -731,7 +711,7 @@ namespace VahTyah.LevelEditor
             );
 
             // Remove button
-            if (enableElementRemoveButton)
+            if (Settings.EnableElementRemoveButton)
             {
                 removeButtonRect.Set(
                     elementHeaderRect.xMax - REMOVE_BUTTON_WIDTH,
@@ -966,7 +946,7 @@ namespace VahTyah.LevelEditor
                 collapsedElementHeight
             );
 
-            if (enableElementRemoveButton)
+            if (Settings.EnableElementRemoveButton)
             {
                 currentLabelRect.xMax -= REMOVE_BUTTON_ALLOCATED_SPACE;
             }
@@ -1077,13 +1057,14 @@ namespace VahTyah.LevelEditor
             leftEdge -= 25;
 
             int buttonCount = -1;
-            if (enableFooterAddButton) buttonCount++;
-            if (enableFooterRemoveButton) buttonCount++;
-            if (enableFooterReloadButton) buttonCount++;
-    
+            if (Settings.EnableFooterAddButton) buttonCount++;
+            if (Settings.EnableFooterRemoveButton) buttonCount++;
+            if (Settings.EnableFooterReloadButton) buttonCount++;
+
             leftEdge -= 25 * buttonCount;
 
-            float borderBackground = globalBackgroundStyle.backgroundConfig.GetLayerByType(LayerType.Border)?.borderWidth.z ?? 0;
+            float borderBackground =
+                globalBackgroundStyle.backgroundConfig.GetLayerByType(LayerType.Border)?.borderWidth.z ?? 0;
 
             buttonsRect.Set(
                 leftEdge,
@@ -1106,17 +1087,18 @@ namespace VahTyah.LevelEditor
 
             GUIStyle buttonStyle = new GUIStyle("RL FooterButton");
 
-            if (enableFooterReloadButton)
+            if (Settings.EnableFooterReloadButton)
             {
                 if (GUI.Button(footerButtonRect, EditorGUIUtility.TrIconContent("Refresh"), buttonStyle))
                 {
                     // reloadCallback?.Invoke();
                     ReloadList();
                 }
+
                 footerButtonRect.x += 25;
             }
-            
-            if (enableFooterAddButton)
+
+            if (Settings.EnableFooterAddButton)
             {
                 GUIContent addIcon = addElementWithDropdownCallback != null && enableAddDropdown
                     ? EditorGUIUtility.TrIconContent("Toolbar Plus More")
@@ -1137,7 +1119,7 @@ namespace VahTyah.LevelEditor
                 footerButtonRect.x += 25;
             }
 
-            if (enableFooterRemoveButton)
+            if (Settings.EnableFooterRemoveButton)
             {
                 using (new EditorGUI.DisabledScope(selectedIndex < 0 || selectedIndex >= ArraySize()))
                 {
@@ -1735,5 +1717,116 @@ namespace VahTyah.LevelEditor
         }
 
         #endregion
+    }
+
+    public class CustomListSettings
+    {
+        public bool EnableHeader { get; set; } = true;
+        public bool EnableSearch { get; set; } = true;
+        public bool EnableFooterAddButton { get; set; } = true;
+        public bool EnableFooterRemoveButton { get; set; } = true;
+        public bool EnableFooterReloadButton { get; set; } = true;
+        public bool EnableKeyboardNavigation { get; set; } = true;
+        public bool EnableScrollWheelNavigation { get; set; } = true;
+        public bool EnableElementRemoveButton { get; set; } = false;
+        public bool IgnoreDragEvents { get; set; } = false;
+        
+        private string _prefsKeyPrefix = "CustomList_";
+        
+        public CustomListSettings(string prefsKeyPrefix = "CustomList_")
+        {
+            this._prefsKeyPrefix = prefsKeyPrefix;
+            LoadSettings();
+        }
+
+        public void Display()
+        {
+            int oldIndent = EditorGUI.indentLevel;
+            EditorGUI.indentLevel = 0;
+            
+            EditorGUI.BeginChangeCheck();
+            
+            // Group 1: Header & Search
+            EditorGUILayout.LabelField("Display Options", EditorStyles.miniBoldLabel);
+            EditorGUILayout.BeginHorizontal();
+            EnableHeader = EditorGUILayout.ToggleLeft("Enable Header", EnableHeader, GUILayout.Width(150));
+            EnableSearch = EditorGUILayout.ToggleLeft("Enable Search", EnableSearch, GUILayout.Width(150));
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.Space(5);
+            
+            // Group 2: Footer Buttons
+            EditorGUILayout.LabelField("Footer Buttons", EditorStyles.miniBoldLabel);
+            EditorGUILayout.BeginHorizontal();
+            EnableFooterAddButton = EditorGUILayout.ToggleLeft("Add Button", EnableFooterAddButton, GUILayout.Width(150));
+            EnableFooterRemoveButton = EditorGUILayout.ToggleLeft("Remove Button", EnableFooterRemoveButton, GUILayout.Width(150));
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.BeginHorizontal();
+            EnableFooterReloadButton = EditorGUILayout.ToggleLeft("Reload Button", EnableFooterReloadButton, GUILayout.Width(150));
+            EnableElementRemoveButton = EditorGUILayout.ToggleLeft("Element Remove Button", EnableElementRemoveButton, GUILayout.Width(150));
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.Space(5);
+            
+            // Group 3: Navigation & Interaction
+            EditorGUILayout.LabelField("Navigation & Interaction", EditorStyles.miniBoldLabel);
+            EditorGUILayout.BeginHorizontal();
+            EnableKeyboardNavigation = EditorGUILayout.ToggleLeft("Keyboard Navigation", EnableKeyboardNavigation, GUILayout.Width(150));
+            EnableScrollWheelNavigation = EditorGUILayout.ToggleLeft("ScrollWheel Navigation", EnableScrollWheelNavigation, GUILayout.Width(150));
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.BeginHorizontal();
+            IgnoreDragEvents = EditorGUILayout.ToggleLeft("Ignore Drag Events", IgnoreDragEvents, GUILayout.Width(150));
+            EditorGUILayout.EndHorizontal();
+            
+            // Restore indent
+            EditorGUI.indentLevel = oldIndent;
+            
+            if (EditorGUI.EndChangeCheck())
+            {
+                SaveSettings();
+            }
+        }
+        
+        public void ResetToDefault()
+        {
+            EnableHeader = true;
+            EnableSearch = true;
+            EnableFooterAddButton = true;
+            EnableFooterRemoveButton = true;
+            EnableFooterReloadButton = true;
+            EnableKeyboardNavigation = true;
+            EnableScrollWheelNavigation = true;
+            EnableElementRemoveButton = false;
+            IgnoreDragEvents = false;
+        }
+
+        private void SaveSettings()
+        {
+            PlayerPrefs.SetInt($"{_prefsKeyPrefix}CustomList_EnableHeader", EnableHeader ? 1 : 0);
+            PlayerPrefs.SetInt($"{_prefsKeyPrefix}CustomList_EnableSearch", EnableSearch ? 1 : 0);
+            PlayerPrefs.SetInt($"{_prefsKeyPrefix}CustomList_EnableFooterAddButton", EnableFooterAddButton ? 1 : 0);
+            PlayerPrefs.SetInt($"{_prefsKeyPrefix}CustomList_EnableFooterRemoveButton", EnableFooterRemoveButton ? 1 : 0);
+            PlayerPrefs.SetInt($"{_prefsKeyPrefix}CustomList_EnableFooterReloadButton", EnableFooterReloadButton ? 1 : 0);
+            PlayerPrefs.SetInt($"{_prefsKeyPrefix}CustomList_EnableKeyboardNavigation", EnableKeyboardNavigation ? 1 : 0);
+            PlayerPrefs.SetInt($"{_prefsKeyPrefix}CustomList_EnableScrollWheelNavigation", EnableScrollWheelNavigation ? 1 : 0);
+            PlayerPrefs.SetInt($"{_prefsKeyPrefix}CustomList_EnableElementRemoveButton", EnableElementRemoveButton ? 1 : 0);
+            PlayerPrefs.SetInt($"{_prefsKeyPrefix}CustomList_IgnoreDragEvents", IgnoreDragEvents ? 1 : 0);
+            PlayerPrefs.Save();
+        }
+
+        private void LoadSettings()
+        {
+            EnableHeader = PlayerPrefs.GetInt($"{_prefsKeyPrefix}CustomList_EnableHeader", 1) == 1;
+            EnableSearch = PlayerPrefs.GetInt($"{_prefsKeyPrefix}CustomList_EnableSearch", 1) == 1;
+            EnableFooterAddButton = PlayerPrefs.GetInt($"{_prefsKeyPrefix}CustomList_EnableFooterAddButton", 1) == 1;
+            EnableFooterRemoveButton = PlayerPrefs.GetInt($"{_prefsKeyPrefix}CustomList_EnableFooterRemoveButton", 1) == 1;
+            EnableFooterReloadButton = PlayerPrefs.GetInt($"{_prefsKeyPrefix}CustomList_EnableFooterReloadButton", 1) == 1;
+            EnableKeyboardNavigation = PlayerPrefs.GetInt($"{_prefsKeyPrefix}CustomList_EnableKeyboardNavigation", 1) == 1;
+            EnableScrollWheelNavigation = PlayerPrefs.GetInt($"{_prefsKeyPrefix}CustomList_EnableScrollWheelNavigation", 1) == 1;
+            EnableElementRemoveButton = PlayerPrefs.GetInt($"{_prefsKeyPrefix}CustomList_EnableElementRemoveButton", 0) == 1;
+            IgnoreDragEvents = PlayerPrefs.GetInt($"{_prefsKeyPrefix}CustomList_IgnoreDragEvents", 0) == 1;
+        }
     }
 }

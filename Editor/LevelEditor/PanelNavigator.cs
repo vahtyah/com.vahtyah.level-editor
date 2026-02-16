@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
@@ -54,8 +54,9 @@ namespace VahTyah.LevelEditor
             }
             else
             {
-                currentPanelStyle = LevelEditorStyleData.PanelNavigatorStyles.CreateDefaultStyles();
-                contentBackground = LevelEditorStyleData.GlobalBackground.CreateDefaultStyles();
+                bool isDarkMode = EditorGUIUtility.isProSkin;
+                currentPanelStyle = LevelEditorStyleData.PanelNavigatorStyles.CreateDefaultStyles(isDarkMode);
+                contentBackground = LevelEditorStyleData.GlobalBackground.CreateDefaultStyles(isDarkMode);
             }
         }
 
@@ -123,7 +124,6 @@ namespace VahTyah.LevelEditor
                 GUIStyle labelStyle = new GUIStyle(EditorStyles.label)
                 {
                     alignment = TextAnchor.MiddleCenter,
-                    normal = { textColor = isActive ? Color.white : new Color(0.5f, 0.5f, 0.5f) },
                     fontStyle = isActive ? FontStyle.Bold : FontStyle.Normal
                 };
 
