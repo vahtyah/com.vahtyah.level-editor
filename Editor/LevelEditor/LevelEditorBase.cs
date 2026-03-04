@@ -14,7 +14,7 @@ namespace VahTyah.LevelEditor
         protected ResizableSeparator ResizableSidebar;
         protected LevelsHandlerBase LevelHandler;
 
-        private const string LEVEL_EDITOR_SCENE_PATH = "Assets/Scenes/LevelEditor.unity";
+        private const string LEVEL_EDITOR_SCENE_PATH = "Assets/LevelEditor/Editor/Scenes/LevelEditor.unity";
         private const string LEVEL_EDITOR_SCENE_NAME = "LevelEditor";
 
         [MenuItem("Tools/Level Editor")]
