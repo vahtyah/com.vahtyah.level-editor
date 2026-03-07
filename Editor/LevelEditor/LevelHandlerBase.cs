@@ -336,7 +336,8 @@ namespace VahTyah.LevelEditor
             {
                 PlayerPrefs.SetInt(PREFS_LEVEL, index);
                 PlayerPrefs.Save();
-                // LevelEditorBase.Instance.OpenLevel(levelObject, index);
+                var levelObject = levelsSerializedProperty.GetArrayElementAtIndex(index).objectReferenceValue;
+                LevelEditorBase.Instance.OpenLevel(levelObject, index);
                 onLevelOpenedCallback?.Invoke(index);
             }
         }

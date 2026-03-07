@@ -3,6 +3,7 @@ using UnityEngine;
 using System;
 using UnityEditor;
 using VahTyah.LevelEditor;
+using Object = UnityEngine.Object;
 
 namespace VahTyah.LevelEditor
 {
@@ -127,6 +128,11 @@ namespace VahTyah.LevelEditor
         private void OpenSettings()
         {
             LevelEditorSettingsWindow.ShowWindow();
+        }
+
+        public virtual void OpenLevel(Object levelObject, int index)
+        {
+            
         }
     }
 }
