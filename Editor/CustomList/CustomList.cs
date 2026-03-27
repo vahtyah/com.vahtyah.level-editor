@@ -164,7 +164,11 @@ namespace VahTyah.LevelEditor
         public int SelectedIndex
         {
             get => selectedIndex;
-            set => selectedIndex = value;
+            set
+            {
+                selectedIndex = value;
+                FocusSelectionPage();
+            }
         }
 
         public float MinHeight
@@ -430,6 +434,7 @@ namespace VahTyah.LevelEditor
             EditorGUI.indentLevel = 0;
 
             DoCalculations();
+            TryAutoFocusSelectionOnOutsideClick();
 
             // Draw global background
             LayerDrawingSystem.DrawLayers(globalRect, globalBackgroundStyle.backgroundConfig);
@@ -545,16 +550,6 @@ namespace VahTyah.LevelEditor
                 if (pagesCount > 1)
                 {
                     currentPage = Mathf.Clamp(currentPage, 0, pagesCount - 1);
-
-                    // Keep selected element in view
-                    if (selectedIndex != -1)
-                    {
-                        int displayIndex = isSearchActive ? filteredIndices.IndexOf(selectedIndex) : selectedIndex;
-                        if (displayIndex >= 0)
-                        {
-                            currentPage = Mathf.FloorToInt((displayIndex + 0f) / pageElementCount);
-                        }
-                    }
                 }
 
                 pageBeginIndex = currentPage * pageElementCount;
@@ -873,7 +868,6 @@ namespace VahTyah.LevelEditor
                 if (GUI.Button(firstPageButtonRect, "<<", buttonStyle))
                 {
                     currentPage = 0;
-                    selectedIndex = -1;
                 }
             }
 
@@ -883,7 +877,6 @@ namespace VahTyah.LevelEditor
                 if (GUI.Button(previousPageButtonRect, "<", buttonStyle))
                 {
                     currentPage--;
-                    selectedIndex = -1;
                 }
             }
 
@@ -906,7 +899,6 @@ namespace VahTyah.LevelEditor
                 if (GUI.Button(nextPageButtonRect, ">", buttonStyle))
                 {
                     currentPage++;
-                    selectedIndex = -1;
                 }
             }
 
@@ -916,7 +908,6 @@ namespace VahTyah.LevelEditor
                 if (GUI.Button(lastPageButtonRect, ">>", buttonStyle))
                 {
                     currentPage = pagesCount - 1;
-                    selectedIndex = -1;
                 }
             }
         }
@@ -1466,12 +1457,6 @@ namespace VahTyah.LevelEditor
                     {
                         OnSelectionChanged(selectedIndex - 1);
 
-                        // Auto switch page if needed
-                        if (enablePagination && selectedIndex < pageBeginIndex)
-                        {
-                            currentPage--;
-                        }
-
                         handled = true;
                     }
 
@@ -1483,12 +1468,6 @@ namespace VahTyah.LevelEditor
                     {
                         OnSelectionChanged(selectedIndex + 1);
 
-                        // Auto switch page if needed
-                        if (enablePagination && selectedIndex >= pageBeginIndex + pageElementCount)
-                        {
-                            currentPage++;
-                        }
-
                         handled = true;
                     }
 
@@ -1499,7 +1478,6 @@ namespace VahTyah.LevelEditor
                     if (enablePagination && currentPage > 0)
                     {
                         currentPage--;
-                        selectedIndex = -1;
                         handled = true;
                     }
 
@@ -1510,7 +1488,6 @@ namespace VahTyah.LevelEditor
                     if (enablePagination && currentPage < pagesCount - 1)
                     {
                         currentPage++;
-                        selectedIndex = -1;
                         handled = true;
                     }
 
@@ -1560,7 +1537,6 @@ namespace VahTyah.LevelEditor
                     if (enablePagination && currentPage > 0)
                     {
                         currentPage = 0;
-                        selectedIndex = -1;
                         handled = true;
                     }
 
@@ -1571,7 +1547,6 @@ namespace VahTyah.LevelEditor
                     if (enablePagination && currentPage < pagesCount - 1)
                     {
                         currentPage = pagesCount - 1;
-                        selectedIndex = -1;
                         handled = true;
                     }
 
@@ -1622,7 +1597,6 @@ namespace VahTyah.LevelEditor
 
             if (handled)
             {
-                selectedIndex = -1;
                 currentEvent.Use();
                 RequestRepaint();
             }
@@ -1669,8 +1643,47 @@ namespace VahTyah.LevelEditor
 
         private void OnSelectionChanged(int index)
         {
-            selectedIndex = index;
+            SelectedIndex = index;
             selectionChangedCallback?.Invoke();
+        }
+
+        private void FocusSelectionPage()
+        {
+            if (selectedIndex < 0)
+                return;
+
+            int elementsPerPage = pageElementCount > 0 ? pageElementCount : maxElementCount;
+            if (elementsPerPage <= 0)
+                return;
+
+            int displayIndex = selectedIndex;
+            if (isSearchActive)
+            {
+                displayIndex = filteredIndices.IndexOf(selectedIndex);
+                if (displayIndex < 0)
+                    return;
+            }
+
+            currentPage = Mathf.Max(0, displayIndex / elementsPerPage);
+        }
+
+        private void TryAutoFocusSelectionOnOutsideClick()
+        {
+            if (!Settings.AutoFocusOnOutsideClick)
+                return;
+
+            if (currentEvent.type != EventType.MouseDown || currentEvent.button != 0)
+                return;
+
+            if (globalRect.height < 5f || globalRect.Contains(currentEvent.mousePosition))
+                return;
+
+            int pageBeforeFocus = currentPage;
+            FocusSelectionPage();
+            if (pageBeforeFocus != currentPage)
+            {
+                RequestRepaint();
+            }
         }
 
         private void AddElement()
@@ -1730,6 +1743,7 @@ namespace VahTyah.LevelEditor
         public bool EnableScrollWheelNavigation { get; set; } = true;
         public bool EnableElementRemoveButton { get; set; } = false;
         public bool IgnoreDragEvents { get; set; } = false;
+        public bool AutoFocusOnOutsideClick { get; set; } = true;
         
         private string _prefsKeyPrefix = "CustomList_";
         
@@ -1778,6 +1792,7 @@ namespace VahTyah.LevelEditor
             
             EditorGUILayout.BeginHorizontal();
             IgnoreDragEvents = EditorGUILayout.ToggleLeft("Ignore Drag Events", IgnoreDragEvents, GUILayout.Width(150));
+            AutoFocusOnOutsideClick = EditorGUILayout.ToggleLeft("Auto Focus Outside Click", AutoFocusOnOutsideClick, GUILayout.Width(170));
             EditorGUILayout.EndHorizontal();
             
             // Restore indent
@@ -1800,6 +1815,7 @@ namespace VahTyah.LevelEditor
             EnableScrollWheelNavigation = true;
             EnableElementRemoveButton = false;
             IgnoreDragEvents = false;
+            AutoFocusOnOutsideClick = true;
         }
 
         private void SaveSettings()
@@ -1813,6 +1829,7 @@ namespace VahTyah.LevelEditor
             PlayerPrefs.SetInt($"{_prefsKeyPrefix}CustomList_EnableScrollWheelNavigation", EnableScrollWheelNavigation ? 1 : 0);
             PlayerPrefs.SetInt($"{_prefsKeyPrefix}CustomList_EnableElementRemoveButton", EnableElementRemoveButton ? 1 : 0);
             PlayerPrefs.SetInt($"{_prefsKeyPrefix}CustomList_IgnoreDragEvents", IgnoreDragEvents ? 1 : 0);
+            PlayerPrefs.SetInt($"{_prefsKeyPrefix}CustomList_AutoFocusOnOutsideClick", AutoFocusOnOutsideClick ? 1 : 0);
             PlayerPrefs.Save();
         }
 
@@ -1827,6 +1844,7 @@ namespace VahTyah.LevelEditor
             EnableScrollWheelNavigation = PlayerPrefs.GetInt($"{_prefsKeyPrefix}CustomList_EnableScrollWheelNavigation", 1) == 1;
             EnableElementRemoveButton = PlayerPrefs.GetInt($"{_prefsKeyPrefix}CustomList_EnableElementRemoveButton", 0) == 1;
             IgnoreDragEvents = PlayerPrefs.GetInt($"{_prefsKeyPrefix}CustomList_IgnoreDragEvents", 0) == 1;
+            AutoFocusOnOutsideClick = PlayerPrefs.GetInt($"{_prefsKeyPrefix}CustomList_AutoFocusOnOutsideClick", 1) == 1;
         }
     }
 }
