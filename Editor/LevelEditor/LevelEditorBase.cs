@@ -3,14 +3,15 @@ using UnityEngine;
 using System;
 using UnityEditor;
 using VahTyah.LevelEditor;
+using VahTyah.Core;
 using Object = UnityEngine.Object;
 
 namespace VahTyah.LevelEditor
 {
     public abstract class LevelEditorBase : EditorWindow, IHasCustomMenu
     {
-        private const string DEFAULT_LEVEL_EDITOR_SCENE_PATH = "Assets/LevelEditor/Editor/Scenes/LevelEditor.unity";
-        private const string DEFAULT_LEVEL_EDITOR_SCENE_NAME = "LevelEditor";
+        private const string DEFAULT_LEVEL_EDITOR_SCENE_PATH = LevelEditorStylesDatabase.DEFAULT_LEVEL_EDITOR_SCENE_PATH;
+        private const string DEFAULT_LEVEL_EDITOR_SCENE_NAME = LevelEditorStylesDatabase.DEFAULT_LEVEL_EDITOR_SCENE_NAME;
 
         public static EditorWindow Window;
         public static LevelEditorBase Instance;
@@ -122,12 +123,6 @@ namespace VahTyah.LevelEditor
             GUILayout.Space(5);
             EditorGUILayout.LabelField("Levels Settings", EditorStyles.boldLabel);
             GUILayout.Space(5);
-
-            BaseSettings.Display();
-            GUILayout.Space(10);
-
-            EditorGUILayout.LabelField("CustomList Settings", EditorStyles.boldLabel);
-            GUILayout.Space(5);
             LevelHandler.CustomList.Settings.Display();
         }
 
@@ -160,69 +155,36 @@ namespace VahTyah.LevelEditor
 
     public class LevelEditorBaseSettings
     {
-        private const string PREFS_SCENE_PATH = "VahTyah.LevelEditor.ScenePath";
-        private const string PREFS_SCENE_NAME = "VahTyah.LevelEditor.SceneName";
-
         private readonly string defaultScenePath;
         private readonly string defaultSceneName;
+        private LevelEditorStylesDatabase stylesDatabase;
 
-        public string LevelEditorScenePath { get; private set; }
-        public string LevelEditorSceneName { get; private set; }
+        public string LevelEditorScenePath => GetDatabase() != null
+            ? stylesDatabase.LevelEditorScenePath
+            : defaultScenePath;
+        public string LevelEditorSceneName => GetDatabase() != null
+            ? stylesDatabase.LevelEditorSceneName
+            : defaultSceneName;
 
         public LevelEditorBaseSettings(string defaultScenePath, string defaultSceneName)
         {
             this.defaultScenePath = defaultScenePath;
             this.defaultSceneName = defaultSceneName;
-            Load();
+            LoadDatabase();
         }
 
-        public void Display()
+        private void LoadDatabase()
         {
-            EditorGUI.BeginChangeCheck();
-
-            EditorGUILayout.LabelField("Scene Settings", EditorStyles.miniBoldLabel);
-            string scenePath = EditorGUILayout.TextField("Scene Path", LevelEditorScenePath);
-            string sceneName = EditorGUILayout.TextField("Scene Name", LevelEditorSceneName);
-
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Reset Scene Defaults", GUILayout.Width(150)))
+            if (stylesDatabase == null)
             {
-                LevelEditorScenePath = defaultScenePath;
-                LevelEditorSceneName = defaultSceneName;
-                Save();
-            }
-
-            EditorGUILayout.EndHorizontal();
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                LevelEditorScenePath = string.IsNullOrWhiteSpace(scenePath) ? defaultScenePath : scenePath.Trim();
-                LevelEditorSceneName = string.IsNullOrWhiteSpace(sceneName) ? defaultSceneName : sceneName.Trim();
-                Save();
+                stylesDatabase = EditorUtils.GetAsset<LevelEditorStylesDatabase>();
             }
         }
 
-        private void Save()
+        private LevelEditorStylesDatabase GetDatabase()
         {
-            EditorPrefs.SetString(PREFS_SCENE_PATH, LevelEditorScenePath);
-            EditorPrefs.SetString(PREFS_SCENE_NAME, LevelEditorSceneName);
-        }
-
-        private void Load()
-        {
-            LevelEditorScenePath = EditorPrefs.GetString(PREFS_SCENE_PATH, defaultScenePath);
-            LevelEditorSceneName = EditorPrefs.GetString(PREFS_SCENE_NAME, defaultSceneName);
-
-            if (string.IsNullOrWhiteSpace(LevelEditorScenePath))
-            {
-                LevelEditorScenePath = defaultScenePath;
-            }
-
-            if (string.IsNullOrWhiteSpace(LevelEditorSceneName))
-            {
-                LevelEditorSceneName = defaultSceneName;
-            }
+            LoadDatabase();
+            return stylesDatabase;
         }
     }
 }

@@ -9,8 +9,33 @@ namespace VahTyah.LevelEditor
     // [CreateAssetMenu(fileName = "StylesDatabase", menuName = "Custom List/List Styles Database", order = 1)]
     public class LevelEditorStylesDatabase : ScriptableObject
     {
+        public const string DEFAULT_LEVEL_EDITOR_SCENE_PATH = "Assets/LevelEditor/Editor/Scenes/LevelEditor.unity";
+        public const string DEFAULT_LEVEL_EDITOR_SCENE_NAME = "LevelEditor";
+
         // [SerializeField] private int defaultStyleIndex = 0;
         [SerializeField] private List<LevelEditorStyleData> styles = new List<LevelEditorStyleData>();
+        [SerializeField] private string levelEditorScenePath = DEFAULT_LEVEL_EDITOR_SCENE_PATH;
+        [SerializeField] private string levelEditorSceneName = DEFAULT_LEVEL_EDITOR_SCENE_NAME;
+
+        public string LevelEditorScenePath
+        {
+            get => string.IsNullOrWhiteSpace(levelEditorScenePath)
+                ? DEFAULT_LEVEL_EDITOR_SCENE_PATH
+                : levelEditorScenePath;
+            set => levelEditorScenePath = string.IsNullOrWhiteSpace(value)
+                ? DEFAULT_LEVEL_EDITOR_SCENE_PATH
+                : value.Trim();
+        }
+
+        public string LevelEditorSceneName
+        {
+            get => string.IsNullOrWhiteSpace(levelEditorSceneName)
+                ? DEFAULT_LEVEL_EDITOR_SCENE_NAME
+                : levelEditorSceneName;
+            set => levelEditorSceneName = string.IsNullOrWhiteSpace(value)
+                ? DEFAULT_LEVEL_EDITOR_SCENE_NAME
+                : value.Trim();
+        }
 
         public void AddDefaultStyle()
         {
