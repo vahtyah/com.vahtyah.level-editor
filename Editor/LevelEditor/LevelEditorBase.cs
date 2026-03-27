@@ -9,14 +9,15 @@ namespace VahTyah.LevelEditor
 {
     public abstract class LevelEditorBase : EditorWindow, IHasCustomMenu
     {
+        private const string DEFAULT_LEVEL_EDITOR_SCENE_PATH = "Assets/LevelEditor/Editor/Scenes/LevelEditor.unity";
+        private const string DEFAULT_LEVEL_EDITOR_SCENE_NAME = "LevelEditor";
+
         public static EditorWindow Window;
         public static LevelEditorBase Instance;
 
         protected ResizableSeparator ResizableSidebar;
         protected LevelsHandlerBase LevelHandler;
-
-        private const string LEVEL_EDITOR_SCENE_PATH = "Assets/LevelEditor/Editor/Scenes/LevelEditor.unity";
-        private const string LEVEL_EDITOR_SCENE_NAME = "LevelEditor";
+        protected LevelEditorBaseSettings BaseSettings;
 
         [MenuItem("Tools/Level Editor")]
         static void ShowWindow()
@@ -53,6 +54,7 @@ namespace VahTyah.LevelEditor
 
         protected virtual void OnEnable()
         {
+            EnsureBaseSettings();
             LevelHandler = GetLevelHandler;
             Instance = this;
             ResizableSidebar = new ResizableSeparator("editor_sidebar_width", 240);
@@ -66,7 +68,9 @@ namespace VahTyah.LevelEditor
 
         protected virtual void OnGUI()
         {
-            if (!LevelEditorUtils.IsInScene(LEVEL_EDITOR_SCENE_NAME))
+            EnsureBaseSettings();
+
+            if (!LevelEditorUtils.IsInScene(BaseSettings.LevelEditorSceneName))
             {
                 DrawSceneRequiredMessage();
                 return;
@@ -107,17 +111,35 @@ namespace VahTyah.LevelEditor
             if (GUILayout.Button("Open LevelEditor Scene", GUILayout.Height(30)))
             {
                 LevelsHandlerBase.IsLastLevelOpened = false;
-                LevelEditorUtils.OpenScene(LEVEL_EDITOR_SCENE_PATH);
+                LevelEditorUtils.OpenScene(BaseSettings.LevelEditorScenePath);
             }
         }
 
         public virtual void DisplaySettings()
         {
+            EnsureBaseSettings();
+
             GUILayout.Space(5);
             EditorGUILayout.LabelField("Levels Settings", EditorStyles.boldLabel);
             GUILayout.Space(5);
-            
+
+            BaseSettings.Display();
+            GUILayout.Space(10);
+
+            EditorGUILayout.LabelField("CustomList Settings", EditorStyles.boldLabel);
+            GUILayout.Space(5);
             LevelHandler.CustomList.Settings.Display();
+        }
+
+        private void EnsureBaseSettings()
+        {
+            if (BaseSettings == null)
+            {
+                BaseSettings = new LevelEditorBaseSettings(
+                    DEFAULT_LEVEL_EDITOR_SCENE_PATH,
+                    DEFAULT_LEVEL_EDITOR_SCENE_NAME
+                );
+            }
         }
 
         public void AddItemsToMenu(GenericMenu menu)
@@ -133,6 +155,74 @@ namespace VahTyah.LevelEditor
         public virtual void OpenLevel(Object levelObject, int index)
         {
             
+        }
+    }
+
+    public class LevelEditorBaseSettings
+    {
+        private const string PREFS_SCENE_PATH = "VahTyah.LevelEditor.ScenePath";
+        private const string PREFS_SCENE_NAME = "VahTyah.LevelEditor.SceneName";
+
+        private readonly string defaultScenePath;
+        private readonly string defaultSceneName;
+
+        public string LevelEditorScenePath { get; private set; }
+        public string LevelEditorSceneName { get; private set; }
+
+        public LevelEditorBaseSettings(string defaultScenePath, string defaultSceneName)
+        {
+            this.defaultScenePath = defaultScenePath;
+            this.defaultSceneName = defaultSceneName;
+            Load();
+        }
+
+        public void Display()
+        {
+            EditorGUI.BeginChangeCheck();
+
+            EditorGUILayout.LabelField("Scene Settings", EditorStyles.miniBoldLabel);
+            string scenePath = EditorGUILayout.TextField("Scene Path", LevelEditorScenePath);
+            string sceneName = EditorGUILayout.TextField("Scene Name", LevelEditorSceneName);
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Reset Scene Defaults", GUILayout.Width(150)))
+            {
+                LevelEditorScenePath = defaultScenePath;
+                LevelEditorSceneName = defaultSceneName;
+                Save();
+            }
+
+            EditorGUILayout.EndHorizontal();
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                LevelEditorScenePath = string.IsNullOrWhiteSpace(scenePath) ? defaultScenePath : scenePath.Trim();
+                LevelEditorSceneName = string.IsNullOrWhiteSpace(sceneName) ? defaultSceneName : sceneName.Trim();
+                Save();
+            }
+        }
+
+        private void Save()
+        {
+            EditorPrefs.SetString(PREFS_SCENE_PATH, LevelEditorScenePath);
+            EditorPrefs.SetString(PREFS_SCENE_NAME, LevelEditorSceneName);
+        }
+
+        private void Load()
+        {
+            LevelEditorScenePath = EditorPrefs.GetString(PREFS_SCENE_PATH, defaultScenePath);
+            LevelEditorSceneName = EditorPrefs.GetString(PREFS_SCENE_NAME, defaultSceneName);
+
+            if (string.IsNullOrWhiteSpace(LevelEditorScenePath))
+            {
+                LevelEditorScenePath = defaultScenePath;
+            }
+
+            if (string.IsNullOrWhiteSpace(LevelEditorSceneName))
+            {
+                LevelEditorSceneName = defaultSceneName;
+            }
         }
     }
 }
