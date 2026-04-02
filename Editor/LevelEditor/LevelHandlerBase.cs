@@ -343,7 +343,6 @@ namespace VahTyah.LevelEditor
                 
                 LevelEditorBase.Instance.OpenLevel(levelObject, index);
                 onLevelOpenedCallback?.Invoke(index);
-                EditorGUIUtility.PingObject(levelObject);
             }
         }
 
