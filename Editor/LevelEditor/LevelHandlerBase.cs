@@ -23,10 +23,8 @@ namespace VahTyah.LevelEditor
         private const string REMOVING_LEVEL_TITLE = "Removing level";
         private const string YES = "Yes";
         private const string CANCEL = "Cancel";
-        private const string FORMAT_TYPE = "000";
         private const string PATH_SEPARATOR = "/";
         private const string DEFAULT_LEVEL_LIST_HEADER = "Levels";
-        private const string REMOVE_SELECTION = "Clear Selection";
         private const string RENAME_LEVELS_LABEL = "Rename Levels";
         private const string GLOBAL_VALIDATION_LABEL = "Global Validation";
         private const string REMOVE_ELEMENT_CALLBACK = "Delete Level";
@@ -337,8 +335,15 @@ namespace VahTyah.LevelEditor
                 PlayerPrefs.SetInt(PREFS_LEVEL, index);
                 PlayerPrefs.Save();
                 var levelObject = levelsSerializedProperty.GetArrayElementAtIndex(index).objectReferenceValue;
+                if(levelObject == null)
+                {
+                    Debug.LogError($"Level at index {index} is null. Cannot open.");
+                    return;
+                }
+                
                 LevelEditorBase.Instance.OpenLevel(levelObject, index);
                 onLevelOpenedCallback?.Invoke(index);
+                EditorGUIUtility.PingObject(levelObject);
             }
         }
 
@@ -590,6 +595,11 @@ namespace VahTyah.LevelEditor
         {
             OpenLastActiveLevel();
             customList.Display();
+        }
+        
+        public void FocusOnSelectedLevel()
+        {
+            customList?.FocusSelectionPage();
         }
 
         #endregion

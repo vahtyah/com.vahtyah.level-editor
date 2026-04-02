@@ -53,6 +53,11 @@ namespace VahTyah.LevelEditor
             return null;
         }
 
+        protected void OnFocus()
+        {
+            LevelHandler?.FocusOnSelectedLevel();
+        }
+
         protected virtual void OnEnable()
         {
             EnsureBaseSettings();

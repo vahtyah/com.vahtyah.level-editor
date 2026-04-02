@@ -1647,7 +1647,7 @@ namespace VahTyah.LevelEditor
             selectionChangedCallback?.Invoke();
         }
 
-        private void FocusSelectionPage()
+        public void FocusSelectionPage()
         {
             if (selectedIndex < 0)
                 return;
