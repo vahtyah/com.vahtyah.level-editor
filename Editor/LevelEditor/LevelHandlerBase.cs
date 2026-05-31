@@ -80,6 +80,7 @@ namespace VahTyah.LevelEditor
         private SerializedObject levelsDatabaseSerializedObject;
         private SerializedProperty levelsSerializedProperty;
         private CustomList customList;
+        private LevelEditorConfig levelEditorConfig;
 
         #endregion
 
@@ -133,6 +134,7 @@ namespace VahTyah.LevelEditor
 
         private void Initialize()
         {
+            SetupLevelEditorConfig();
             SetupLevel();
             SetLevelLabels();
             SetupCustomList();
@@ -142,13 +144,21 @@ namespace VahTyah.LevelEditor
 
         #region Custom List Setup
 
+        private void SetupLevelEditorConfig()
+        {
+            var database = EditorUtils.GetAsset<LevelEditorStylesDatabase>();
+            if (database == null) LevelEditorSettings.CreateLevelEditorStyle();
+            if (database == null) return;
+            levelEditorConfig = database.LevelEditorConfiguration;
+        }
+
         private void SetupLevel()
         {
-            levelsDatabase = EditorUtils.GetAsset(GetLevelDatabaseType);
+            levelsDatabase = EditorUtils.GetAsset(levelEditorConfig?.GetLevelDatabaseType());
             if (levelsDatabase != null)
             {
                 levelsDatabaseSerializedObject = new SerializedObject(levelsDatabase);
-                levelsSerializedProperty = levelsDatabaseSerializedObject.FindProperty(GetPropertyName);
+                levelsSerializedProperty = levelsDatabaseSerializedObject.FindProperty(levelEditorConfig?.levelPropertyName ?? "_levelData");
             }
             else
             {
@@ -156,9 +166,7 @@ namespace VahTyah.LevelEditor
             }
         }
 
-        public abstract string GetPropertyName { get; }
-        public abstract Type GetLevelDatabaseType { get; }
-        public abstract Type GetLevelType { get; }
+        public Type GetLevelType => levelEditorConfig?.GetLevelType();
 
         private void SetupCustomList()
         {
@@ -638,7 +646,7 @@ namespace VahTyah.LevelEditor
 
         #region Helpers
 
-        public abstract string LevelFolderPath { get; }
+        public string LevelFolderPath => levelEditorConfig?.levelFolderPath ?? "Assets/Data/Levels";
 
         public void OpenLastActiveLevel()
         {

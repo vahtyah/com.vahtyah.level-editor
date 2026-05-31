@@ -70,7 +70,20 @@ namespace VahTyah.LevelEditor
         {
         }
 
-        protected abstract LevelsHandlerBase GetLevelHandler { get; }
+        protected virtual LevelsHandlerBase GetLevelHandler
+        {
+            get
+            {
+                var db = EditorUtils.GetAsset<LevelEditorStylesDatabase>();
+                if (db != null)
+                {
+                    var handlerType = db.LevelEditorConfiguration.GetLevelHandlerType();
+                    if (handlerType != null && typeof(LevelsHandlerBase).IsAssignableFrom(handlerType))
+                        return (LevelsHandlerBase)Activator.CreateInstance(handlerType);
+                }
+                return null;
+            }
+        }
 
         protected virtual void OnGUI()
         {

@@ -16,6 +16,9 @@ namespace VahTyah.LevelEditor
         [SerializeField] private List<LevelEditorStyleData> styles = new List<LevelEditorStyleData>();
         [SerializeField] private string levelEditorScenePath = DEFAULT_LEVEL_EDITOR_SCENE_PATH;
         [SerializeField] private string levelEditorSceneName = DEFAULT_LEVEL_EDITOR_SCENE_NAME;
+        [SerializeField] private LevelEditorConfig levelEditorConfig = new LevelEditorConfig();
+
+        public LevelEditorConfig LevelEditorConfiguration => levelEditorConfig;
 
         public string LevelEditorScenePath
         {
@@ -626,6 +629,69 @@ namespace VahTyah.LevelEditor
                 config.layers[0].padding = new Padding(2, 2, 2, 0);
                 return config;
             }
+        }
+    }
+
+    /// <summary>
+    /// Configuration for the Level Handler.
+    /// Specify type names (simple or assembly-qualified) so that no LevelsHandlerBase
+    /// subclass is required — use DefaultLevelsHandler instead.
+    /// </summary>
+    [Serializable]
+    public class LevelEditorConfig
+    {
+        [Tooltip("SerializedProperty name on the database ScriptableObject that holds the levels array.\nExample: _levelData")]
+        public string levelPropertyName = "Levels";
+
+        [Tooltip("Simple or assembly-qualified name of the ScriptableObject that acts as the levels database.\nExample: LevelDatabase  OR  LevelDatabase, Assembly-CSharp")]
+        public string levelDatabaseTypeName = "LevelDatabaseConfig";
+
+        [Tooltip("Simple or assembly-qualified name of the ScriptableObject that represents one level.\nExample: LevelData  OR  LevelData, Assembly-CSharp")]
+        public string levelTypeName = "LevelData";
+
+        [Tooltip("Project-relative folder where level assets will be created.\nExample: Assets/_Project/Data/Levels")]
+        public string levelFolderPath = "Assets/Game/Data/Levels";
+
+        [Tooltip("Simple or assembly-qualified name of a LevelsHandlerBase subclass to use.\nLeave empty to use the built-in DefaultLevelsHandler.\nExample: MyCustomHandler  OR  MyCustomHandler, Assembly-CSharp")]
+        public string levelHandlerTypeName = "LevelsHandler";
+
+        // ── Type resolution ──────────────────────────────────────────────
+
+        public Type GetLevelDatabaseType() => ResolveType(levelDatabaseTypeName);
+        public Type GetLevelType()         => ResolveType(levelTypeName);
+
+        /// <summary>
+        /// Resolves the configured LevelsHandlerBase subclass type.
+        /// Returns null if empty or unresolvable — caller should fall back to DefaultLevelsHandler.
+        /// </summary>
+        public Type GetLevelHandlerType() => string.IsNullOrWhiteSpace(levelHandlerTypeName)
+            ? null
+            : ResolveType(levelHandlerTypeName);
+
+        /// <summary>
+        /// Resolves a type by name.
+        /// Tries assembly-qualified lookup first, then searches all loaded assemblies
+        /// by simple (unqualified) name so users can just type "LevelDatabase".
+        /// </summary>
+        private static Type ResolveType(string typeName)
+        {
+            if (string.IsNullOrWhiteSpace(typeName))
+                return null;
+
+            // 1. Try standard lookup (works for assembly-qualified names)
+            var t = Type.GetType(typeName);
+            if (t != null) return t;
+
+            // 2. Search all loaded assemblies by simple or full name
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                t = assembly.GetType(typeName);
+                if (t != null) return t;
+            }
+
+            Debug.LogWarning($"[LevelConfig] Could not resolve type: '{typeName}'. " +
+                             "Check the type name in the LevelEditorStylesDatabase asset.");
+            return null;
         }
     }
 }
