@@ -154,7 +154,7 @@ namespace VahTyah.LevelEditor
 
         public virtual void OpenLevel(Object levelObject, int index)
         {
-            
+            SceneEditorControllerBase.Instance.LoadLevel(levelObject, index);
         }
     }
 

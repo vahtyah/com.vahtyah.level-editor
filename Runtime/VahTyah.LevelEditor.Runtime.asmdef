@@ -1,13 +1,8 @@
 {
-  "name": "VahTyah.LevelEditor.Editor",
+  "name": "VahTyah.LevelEditor.Runtime",
   "rootNamespace": "VahTyah",
-  "references": [
-    "VahTyah.Core.Editor",
-    "VahTyah.LevelEditor.Runtime"
-  ],
-  "includePlatforms": [
-    "Editor"
-  ],
+  "references": [],
+  "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
   "overrideReferences": false,
