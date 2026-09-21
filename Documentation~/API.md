@@ -535,6 +535,7 @@ protected virtual string FormatLevelNumberForDisplay(int number);
 protected virtual string FormatLevelNumberForFile(int number);
 protected virtual string GetLevelLabel(SerializedProperty elementProperty, int elementIndex);
 public virtual string GetLevelLabel(Object levelObject, int index);
+protected virtual Object GetLevelObject(SerializedProperty element);
 protected virtual GUIContent GetLevelValidationIcon(int index);
 public virtual void GlobalValidation();
 protected virtual void OnAddElementWithDropdown(Rect buttonRect);
@@ -547,6 +548,7 @@ public void RenameLevels();
 public void ReopenLevel();
 protected virtual void SetContextMenu(int index, GenericMenu menu);
 public virtual void SetLevelLabels();
+protected virtual void SetLevelObject(SerializedProperty element, Object level);
 protected virtual void SetupCallbacks();
 public void UpdateCurrentLevelLabel(string label);
 ```
@@ -558,6 +560,8 @@ public void UpdateCurrentLevelLabel(string label);
 - `GetLevelType` — Type của level asset, lấy từ LevelEditorConfig.
 - `LevelFolderPath` — Thư mục (project-relative) chứa các level asset, lấy từ config (mặc định "Assets/Data/Levels").
 - `DuplicatePostfix` — Hậu tố thêm vào tên file khi duplicate level (mặc định rỗng → chỉ lấy số kế tiếp).
+- `GetLevelObject` — Resolve the level Object from a serialized array element. Default treats the element as a direct object reference; override for wrapper types (e.g. SmartReference) that store a guid instead of a direct reference.
+- `SetLevelObject` — Assign a level Object into a serialized array element. Default sets the direct object reference; override for wrapper types (e.g. SmartReference).
 - `SetupCallbacks` — Đăng ký toàn bộ callback của ReorderableListView. Override để thêm/đổi callback (gọi base).
 - `GetLevelValidationIcon` — Icon cảnh báo vẽ ở cuối row nếu level tại index đang lỗi validation, ngược lại null.
 - `OnReload` — Gọi khi list reload; dựng lại nhãn các level. Override để thêm xử lý reload.
