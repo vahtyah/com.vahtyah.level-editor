@@ -150,21 +150,10 @@ public void ResetToDefault();
 - `Display` — Draw the settings toggles in the inspector/settings panel and persist any change to PlayerPrefs.
 - `ResetToDefault` — Reset all toggles to their default values (does not save until Display detects a change).
 
-#### interface `IEditorPanel`
-
-A tabbed panel hosted by PanelNavigator. Implement to add a named tab to the editor content area.  
-
-```csharp
-public abstract void Draw(Rect rect);
-public abstract void Initialize();
-public abstract void OnDisable();
-public abstract void OnEnable();
-```
-
 #### abstract class `LevelEditorBase`
 
 *: EditorWindow, IHasCustomMenu*  
-Base class for the Level Editor window. Subclass it (one subclass is auto-discovered for the Tools/Level Editor menu) and override DrawContent to render the main editing area. Hosts the level sidebar (list + toolbar) and the resizable splitter.  
+Base class for the Level Editor window. Subclass it (one subclass is auto-discovered for the VahTyah/Level Editor/Open Window menu) and override DrawContent to render the main editing area. Hosts the level sidebar (list + toolbar) and the resizable splitter.  
 
 ```csharp
 protected LevelEditorBase();
@@ -174,6 +163,7 @@ protected LevelsHandlerBase LevelHandler;
 protected ResizableSeparator ResizableSidebar;
 public static EditorWindow Window;
 protected LevelsHandlerBase GetLevelHandler { get; }
+protected static PanelNavigatorStyle TabBarStyle { get; }
 public void AddItemsToMenu(GenericMenu menu);
 public virtual void DisplaySettings();
 protected virtual void DrawContent();
@@ -189,6 +179,7 @@ public virtual void OpenLevel(Object levelObject, int index);
 - `ResizableSidebar` — Draggable splitter controlling the sidebar width.
 - `LevelHandler` — Handler that manages the level list, toolbar, and validation.
 - `BaseSettings` — Resolved editor scene path/name settings.
+- `TabBarStyle` — Style tab bar theo theme của Level Editor, truyền vào constructor của PanelNavigator (core) để tab bar và sidebar dùng chung một nền.
 - `GetLevelHandler` — Create the level handler instance. By default instantiates the type from the config; override to supply a custom handler.
 - `OnFocus` — On window focus, scroll the list to the currently selected level.
 - `OnEnable` — Create the level handler and sidebar splitter. Override to add setup; call base first.
@@ -242,9 +233,15 @@ public LevelEditorStyleData();
 public LevelEditorStyleData.CustomListStyle customListStyle;
 public LevelEditorStyleData.GlobalBackground globalBackground;
 public LevelEditorStyleData.PanelNavigatorStyles panelNavigatorStyles;
+public static LevelEditorStyleData CreateDefault(bool isDarkMode);
 public static LevelEditorStyleData CreateDefaultStyleData();
+public static LevelEditorStyleData CreateForSkin();
+public PanelNavigatorStyle ToPanelNavigatorStyle();
 ```
 
+- `CreateDefault` — Bộ style dựng sẵn cho theme tối hoặc sáng.
+- `CreateForSkin` — Bộ style dựng sẵn khớp skin Editor hiện tại (pro-skin = dark).
+- `ToPanelNavigatorStyle` — Chuyển style của Level Editor sang PanelNavigatorStyle để truyền vào PanelNavigator của core. Content background lấy từ globalBackground nên tab bar và sidebar (ReorderableListView) vẫn cùng một nền như trước.
 - `CreateDefaultStyleData` — Create style data with defaults chosen from the current editor skin (pro = dark).
 
 #### class `LevelEditorStyleData.CustomListStyle`
@@ -424,65 +421,38 @@ public PanelNavigatorStyles();
 public LayerConfiguration activeTabStyle;
 public LayerConfiguration inactiveTabStyle;
 public float menuBarHeight;
+public static LevelEditorStyleData.PanelNavigatorStyles CreateDefault(bool isDarkMode);
 public static LevelEditorStyleData.PanelNavigatorStyles CreateDefaultStyles(bool isDarkMode);
 ```
+
+- `CreateDefault` — Alias của CreateDefaultStyles cho khớp tên với các factory khác.
 
 #### class `LevelEditorStylesDatabase`
 
 *: ScriptableObject*  
-ScriptableObject holding the Level Editor's theme styles, editor scene path/name, and the LevelEditorConfig. Resolves the active LevelEditorStyleData for the chosen theme.  
+ScriptableObject holding the Level Editor's editor scene path/name and the LevelEditorConfig. Theme/style lives in LevelEditorTheme (local, not in this asset).  
 
 ```csharp
 public LevelEditorStylesDatabase();
 public const string DEFAULT_LEVEL_EDITOR_SCENE_NAME;
 public const string DEFAULT_LEVEL_EDITOR_SCENE_PATH;
-public int CustomStyleCount { get; }
-public int CustomStyleIndex { get; set; }
 public LevelEditorConfig LevelEditorConfiguration { get; }
 public string LevelEditorSceneName { get; set; }
 public string LevelEditorScenePath { get; set; }
-public LevelEditorThemeMode ThemeMode { get; set; }
-public void AddDefaultStyle();
-public static LevelEditorStyleData GetDefaultDarkStyle();
-public static LevelEditorStyleData GetDefaultLightStyle();
-public static LevelEditorStyleData GetDefaultStyle();
-public LevelEditorStyleData GetStyle();
 ```
 
 - `LevelEditorConfiguration` — The level editor configuration (level types, database property, folder, handler) for this database.
 - `LevelEditorScenePath` — Project path of the LevelEditor scene; falls back to the default when unset.
 - `LevelEditorSceneName` — Name of the LevelEditor scene; falls back to the default when unset.
-- `CustomStyleCount` — Number of user-defined custom styles.
-- `ThemeMode` — Selected theme mode, stored locally in EditorPrefs per asset GUID (not serialized in the asset).
-- `CustomStyleIndex` — Index of the active custom style when ThemeMode is Custom (stored in EditorPrefs).
-- `AddDefaultStyle` — Append the built-in dark and light styles to the custom styles list.
-- `GetStyle` — Resolve the active LevelEditorStyleData according to ThemeMode.
-- `GetDefaultStyle` — Built-in style matching the current editor skin (dark for pro skin, otherwise light).
-- `GetDefaultDarkStyle` — Built-in dark style.
-- `GetDefaultLightStyle` — Built-in light style.
 
 #### class `LevelEditorStylesDatabaseEditor`
 
 *: Editor*  
-Custom inspector for LevelEditorStylesDatabase: theme selection plus type/scene/folder pickers for the level editor config.  
+Custom inspector for LevelEditorStylesDatabase: type/scene/folder pickers cho config dùng chung. Theme nằm ở Preferences → VahTyah → Level Editor (lưu local, không commit).  
 
 ```csharp
 public LevelEditorStylesDatabaseEditor();
 public virtual void OnInspectorGUI();
-```
-
-#### enum `LevelEditorThemeMode`
-
-Theme mode for the Level Editor: built-in Light/Dark, System (follows the editor skin), or a Custom style from the asset.  
-
-```csharp
-enum LevelEditorThemeMode : int
-{
-    Light = 0,
-    Dark = 1,
-    System = 2,
-    Custom = 3,
-}
 ```
 
 #### static class `LevelEditorUtils`
@@ -661,21 +631,6 @@ Gọi sau khi một level bị xoá.
 ```csharp
 delegate void RemoveElementCallbackDelegate();
 ```
-
-#### class `PanelNavigator`
-
-Draws a tab bar for a set of named IEditorPanels and renders the active one, styled from the LevelEditor styles database.  
-
-```csharp
-public PanelNavigator(Dictionary<string, IEditorPanel> panels);
-public void Cleanup();
-public void Draw(Rect rect);
-public void OnEnable();
-```
-
-- `OnEnable` — Forward the enable signal to every hosted panel.
-- `Cleanup` — Forward the disable signal to every hosted panel (call on window disable).
-- `Draw` — Draw the active panel content and the tab bar within the given rect.
 
 #### class `ReorderableListView`
 
